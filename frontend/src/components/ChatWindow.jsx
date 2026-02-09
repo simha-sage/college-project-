@@ -1,0 +1,37 @@
+import { Smile, Send } from "lucide-react";
+const ChatWindow = ({ selectedUser }) => (
+  <div className="flex-1 h-full flex flex-col p-6 relative">
+    {/* Header */}
+    <div className="flex items-center justify-between bg-white/10 p-4 rounded-2xl backdrop-blur-md">
+      <div className="flex items-center gap-3">
+        <p className="w-12 h-12 rounded-full bg-gray-500 flex items-center justify-center text-white font-bold text-2xl">
+          {selectedUser.charAt(0)}
+        </p>
+        <div>
+          <h4 className="text-white font-bold">{selectedUser}</h4>
+          <p className="text-green-400 text-xs">Online</p>
+        </div>
+      </div>
+      <div className="flex gap-4 text-white/70"></div>
+    </div>
+
+    {/* Messages Area */}
+    <div className="flex-1 overflow-y-auto py-8 space-y-4"></div>
+
+    {/* Input Area */}
+    <div className="mt-auto flex items-center gap-4 bg-white/10 p-3 rounded-2xl border border-white/20">
+      <Smile
+        size={20}
+        className="text-white/70 cursor-pointer hover:text-white"
+      />
+      <input
+        className="flex-1 bg-transparent text-white outline-none"
+        placeholder="Type your message here..."
+      />
+      <button className="bg-white/20 p-2 rounded-xl text-white">
+        <Send size={20} />
+      </button>
+    </div>
+  </div>
+);
+export default ChatWindow;
