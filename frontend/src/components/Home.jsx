@@ -30,7 +30,7 @@ export const Home = () => {
         )}
         {selectedIcon === "notifications" && <NotificationList />}
         {selectedIcon === "settings" && <SettingsList />}
-        {selectedIcon === "users" && <UserList />}
+        {selectedIcon === "users" && <UserList chats={dummyChats} />}
         {selectedUser !== null ? (
           <ChatWindow selectedUser={selectedUser} />
         ) : (
