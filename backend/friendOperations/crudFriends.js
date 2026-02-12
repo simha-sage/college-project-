@@ -5,6 +5,34 @@ import auth from "../middleware/auth.js";
 
 const router = express.Router();
 
+router.get("/friends", auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).populate(
+      "friends",
+      "name email profilePic",
+    );
+
+    res.json(user.friends);
+  } catch {
+    res.status(500).json({ msg: "Error fetching friends" });
+  }
+});
+
+router.get("/requests", auth, async (req, res) => {
+  try {
+    const myId = req.user.id;
+
+    const requests = await FriendRequest.find({
+      receiver: myId,
+      status: "pending",
+    }).populate("sender", "name email profilePic");
+
+    res.json(requests);
+  } catch {
+    res.status(500).json({ msg: "Error fetching requests" });
+  }
+});
+
 router.post("/add/:userId", auth, async (req, res) => {
   try {
     const myId = req.user.id;

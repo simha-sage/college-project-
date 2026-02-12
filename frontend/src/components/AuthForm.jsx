@@ -2,7 +2,42 @@ import { useState } from "react";
 
 export default function AuthForm() {
   const [signup, setSignup] = useState(false);
-
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const signIn = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      window.location.href = "/";
+      console.log(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+  const signUp = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/auth/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ name, email, password }),
+      });
+      const data = await res.json();
+      console.log(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
   return (
     <div className="h-screen flex justify-center items-center bg-linear-to-br from-gray-900 via-black to-gray-900">
       <div className="relative w-200 h-125 rounded-2xl overflow-hidden backdrop-blur-xl bg-white/10 border border-white/20 shadow-2xl">
@@ -15,14 +50,19 @@ export default function AuthForm() {
             <input
               placeholder="Email"
               className="mb-3 px-4 py-2 rounded bg-white/20 outline-none"
+              onChange={(e) => setEmail(e.target.value)}
             />
             <input
               placeholder="Password"
               type="password"
               className="mb-4 px-4 py-2 rounded bg-white/20 outline-none"
+              onChange={(e) => setPassword(e.target.value)}
             />
 
-            <button className="bg-blue-500 hover:bg-blue-600 py-2 rounded-full">
+            <button
+              className="bg-blue-500 hover:bg-blue-600 py-2 rounded-full"
+              onClick={() => signIn()}
+            >
               SIGN IN
             </button>
           </div>
@@ -34,18 +74,30 @@ export default function AuthForm() {
             <input
               placeholder="Name"
               className="mb-3 px-4 py-2 rounded bg-white/20 outline-none"
+              onChange={(e) => {
+                setName(e.target.value);
+              }}
             />
             <input
               placeholder="Email"
               className="mb-3 px-4 py-2 rounded bg-white/20 outline-none"
+              onChange={(e) => {
+                setEmail(e.target.value);
+              }}
             />
             <input
               placeholder="Password"
               type="password"
               className="mb-4 px-4 py-2 rounded bg-white/20 outline-none"
+              onChange={(e) => {
+                setPassword(e.target.value);
+              }}
             />
 
-            <button className="bg-pink-500 hover:bg-pink-600 py-2 rounded-full">
+            <button
+              className="bg-pink-500 hover:bg-pink-600 py-2 rounded-full"
+              onClick={() => signUp()}
+            >
               SIGN UP
             </button>
           </div>

@@ -6,13 +6,8 @@ import UserList from "./UserList";
 import NotificationList from "./NotificationList";
 import { useState } from "react";
 
-export const Home = () => {
+const Home = () => {
   const [selectedIcon, setSelectedIcon] = useState("messages");
-  const dummyChats = [
-    { name: "Alice", lastMessage: "Hey, how are you?", time: "2:30 PM" },
-    { name: "Bob", lastMessage: "Let's catch up later.", time: "1:15 PM" },
-    { name: "Charlie", lastMessage: "Did you see the game?", time: "12:00 PM" },
-  ];
   const [selectedUser, setSelectedUser] = useState(null);
   return (
     <>
@@ -23,14 +18,13 @@ export const Home = () => {
         />
         {selectedIcon === "messages" && (
           <ChatList
-            chats={dummyChats}
             setSelectedUser={setSelectedUser}
             selectedUser={selectedUser}
           />
         )}
         {selectedIcon === "notifications" && <NotificationList />}
         {selectedIcon === "settings" && <SettingsList />}
-        {selectedIcon === "users" && <UserList chats={dummyChats} />}
+        {selectedIcon === "users" && <UserList />}
         {selectedUser !== null ? (
           <ChatWindow selectedUser={selectedUser} />
         ) : (
@@ -44,3 +38,5 @@ export const Home = () => {
     </>
   );
 };
+
+export default Home;
