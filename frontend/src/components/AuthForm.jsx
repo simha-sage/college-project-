@@ -4,8 +4,8 @@ export default function AuthForm() {
   const [signup, setSignup] = useState(false);
 
   return (
-    <div className="h-screen flex justify-center items-center bg-gradient-to-br from-gray-900 via-black to-gray-900">
-      <div className="relative w-[800px] h-[500px] rounded-2xl overflow-hidden backdrop-blur-xl bg-white/10 border border-white/20 shadow-2xl">
+    <div className="h-screen flex justify-center items-center bg-linear-to-br from-gray-900 via-black to-gray-900">
+      <div className="relative w-200 h-125 rounded-2xl overflow-hidden backdrop-blur-xl bg-white/10 border border-white/20 shadow-2xl">
         {/* FORMS */}
         <div className="flex h-full text-white">
           {/* SIGN IN */}
@@ -53,7 +53,7 @@ export default function AuthForm() {
 
         {/* OVERLAY PANEL */}
         <div
-          className={`absolute top-0 left-0 w-1/2 h-full bg-gradient-to-br from-pink-600 to-purple-700
+          className={`absolute top-0 left-0 w-1/2 h-full bg-linear-to-br from-pink-600 to-purple-700
  backdrop-blur-xl text-white flex flex-col justify-center items-center text-center px-12 transition-all duration-700 ease-in-out
           ${signup ? "translate-x-full" : "translate-x-0"}`}
         >
