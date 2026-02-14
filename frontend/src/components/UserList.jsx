@@ -1,9 +1,10 @@
 import React from "react";
 import { useState, useEffect } from "react";
+const API_URL = import.meta.env.VITE_server || "http://localhost:5000";
 const FriendRequestTemplate = ({ name, email, profilePic, id }) => {
   const onAccept = async () => {
     try {
-      const res = await fetch(`http://localhost:5000/friend/add/${id}`, {
+      const res = await fetch(`${API_URL}/friend/add/${id}`, {
         method: "POST",
         credentials: "include",
       });
@@ -16,7 +17,7 @@ const FriendRequestTemplate = ({ name, email, profilePic, id }) => {
   };
   const onDelete = async () => {
     try {
-      const res = await fetch(`http://localhost:5000/friend/remove/${id}`, {
+      const res = await fetch(`${API_URL}/friend/remove/${id}`, {
         method: "DELETE",
         credentials: "include",
       });
@@ -67,7 +68,7 @@ const AddFriendTemplate = ({ name, email, id }) => {
   const handleAdd = async () => {
     setStatus("pending");
     try {
-      const res = await fetch(`http://localhost:5000/friend/request/${id}`, {
+      const res = await fetch(`${API_URL}/friend/request/${id}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -115,7 +116,7 @@ const UserList = ({ chats }) => {
   const [requests, setRequests] = useState([]);
   const fetchRequests = async () => {
     try {
-      const res = await fetch("http://localhost:5000/friend/requests", {
+      const res = await fetch(`${API_URL}/friend/requests`, {
         method: "GET",
         credentials: "include",
       });
@@ -134,7 +135,7 @@ const UserList = ({ chats }) => {
 
   const fetchSuggestions = async () => {
     try {
-      const res = await fetch("http://localhost:5000/show/suggestions", {
+      const res = await fetch(`${API_URL}/show/suggestions`, {
         method: "GET",
         credentials: "include", // ✅ send cookie
       });
