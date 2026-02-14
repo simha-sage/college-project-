@@ -33,6 +33,7 @@ export default function AuthForm() {
         body: JSON.stringify({ name, email, password }),
       });
       const data = await res.json();
+      window.location.href = "/";
       console.log(data);
     } catch (err) {
       console.error(err);

@@ -1,27 +1,59 @@
 import { Search } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 const ContactTemplete = ({
-  name,
+  friend,
   lastMessage,
-  time,
-  setSelectedUser,
-  selectedUser,
+  conversationId,
+  setConversationId,
+  selectedFriend,
+  setSelectedFriend,
 }) => (
   <div
     className="bg-white/10 p-4 rounded-2xl mb-4 border border-white/10 hover:bg-white/20 transition cursor-pointer flex"
-    onClick={() => setSelectedUser(name == selectedUser ? null : name)}
+    onClick={() => {
+      setSelectedFriend(friend == selectedFriend ? {} : friend);
+      setConversationId(conversationId);
+    }}
   >
     <p className="w-12 h-12 rounded-full bg-gray-500 flex items-center justify-center text-white font-bold text-2xl">
-      {name.charAt(0)}
+      {friend.name.charAt(0)}
     </p>
     <div className="ml-4 flex-1">
-      <p className="text-white text-sm font-medium">{name}</p>
+      <p className="text-white text-sm font-medium">{friend.name}</p>
       <p className="text-white/50 text-xs truncate">{lastMessage}</p>
     </div>
   </div>
 );
-const ChatList = ({ setSelectedUser, selectedUser }) => {
+const ChatList = ({
+  user,
+  selectedFriend,
+  setSelectedFriend,
+  setConversationId,
+}) => {
   const [friends, setFriends] = useState([]);
+  const [conversations, setConversations] = useState([]);
+
+  useEffect(() => {
+    const fetchConvos = async () => {
+      try {
+        const res = await fetch(
+          "http://localhost:5000/convos/myConversations",
+          {
+            credentials: "include",
+          },
+        );
+
+        if (!res.ok) throw new Error("Failed");
+
+        const data = await res.json();
+        setConversations(data);
+      } catch (err) {
+        console.error("Fetch convo error:", err);
+      }
+    };
+
+    fetchConvos();
+  }, []);
 
   useEffect(() => {
     const fetchFriends = async () => {
@@ -58,10 +90,28 @@ const ChatList = ({ setSelectedUser, selectedUser }) => {
         {/* Map through your group data here */}
         {friends.map((friend) => (
           <ContactTemplete
-            key={friend.name}
-            name={friend.name}
-            setSelectedUser={setSelectedUser}
-            selectedUser={selectedUser}
+            key={friend._id}
+            friend={friend}
+            lastMessage={"Say hello!"}
+            conversationId={null}
+            setConversationId={setConversationId}
+            setSelectedFriend={setSelectedFriend}
+            selectedFriend={selectedFriend}
+          />
+        ))}
+      </section>
+      <section>
+        <h3 className="text-white font-semibold mb-4">Conversations</h3>
+        {/* Map through your group data here */}
+        {conversations.map((convo) => (
+          <ContactTemplete
+            key={convo._id}
+            setConversationId={setConversationId}
+            conversationId={convo._id}
+            friend={convo.members.find((m) => m._id !== user._id)}
+            lastMessage={convo.lastMessage}
+            setSelectedFriend={setSelectedFriend}
+            selectedFriend={selectedFriend}
           />
         ))}
       </section>

@@ -32,7 +32,7 @@ const FriendRequestTemplate = ({ name, email, profilePic, id }) => {
     <div className="bg-white/10 p-4 rounded-2xl mb-4 border border-white/10 hover:bg-white/20 transition flex items-center">
       {/* Avatar */}
       <p className="w-12 h-12 rounded-full bg-gray-500 flex items-center justify-center text-white font-bold text-2xl">
-        {name.charAt(0)}
+        {name.charAt(0).toUpperCase()}
       </p>
 
       {/* User Info */}
@@ -45,14 +45,14 @@ const FriendRequestTemplate = ({ name, email, profilePic, id }) => {
       <div className="flex gap-2">
         <button
           onClick={onAccept}
-          className="px-3 py-1 text-xs bg-green-500 hover:bg-green-600 text-white rounded-lg"
+          className="px-3 py-1  bg-green-500 hover:bg-green-600 text-white rounded-lg"
         >
           Accept
         </button>
 
         <button
           onClick={onDelete}
-          className="px-3 py-1 text-xs bg-red-500 hover:bg-red-600 text-white rounded-lg"
+          className="px-3 py-1  bg-red-500 hover:bg-red-600 text-white rounded-lg"
         >
           Delete
         </button>
@@ -61,7 +61,7 @@ const FriendRequestTemplate = ({ name, email, profilePic, id }) => {
   );
 };
 
-const AddFriendTemplate = ({ name, id }) => {
+const AddFriendTemplate = ({ name, email, id }) => {
   const [status, setStatus] = useState("add");
 
   const handleAdd = async () => {
@@ -84,17 +84,20 @@ const AddFriendTemplate = ({ name, id }) => {
     <div className="bg-white/10 p-4 rounded-2xl mb-4 border border-white/10 flex items-center">
       {/* dp */}
       <p className="w-12 h-12 rounded-full bg-gray-500 flex items-center justify-center text-white font-bold text-2xl">
-        {name.charAt(0)}
+        {name.charAt(0).toUpperCase()}
       </p>
 
       <div className="ml-4 flex-1">
-        <p className="text-white text-sm font-medium">{name}</p>
+        <p className="text-white text-sm font-medium">
+          {name.charAt(0).toUpperCase() + name.slice(1)}
+        </p>
+        <p className="text-white/50 text-xs">{email}</p>
       </div>
 
       <button
         onClick={handleAdd}
         disabled={status === "pending"}
-        className={`px-4 py-1 text-xs rounded-lg text-white transition
+        className={`px-4 py-1  rounded-lg text-white transition
           ${
             status === "pending"
               ? "bg-gray-500 cursor-not-allowed"
@@ -175,9 +178,10 @@ const UserList = ({ chats }) => {
         {/* Map through your group data here */}
         {suggestions.map((person) => (
           <AddFriendTemplate
-            key={person.name}
+            key={person._id}
             name={person.name}
             id={person._id}
+            email={person.email}
           />
         ))}
       </section>

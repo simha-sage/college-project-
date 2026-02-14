@@ -1,11 +1,14 @@
 import { UserPlus, Bell, MessageSquare, Settings, LogOut } from "lucide-react";
+import { useContext } from "react";
+import { AuthContext } from "../AuthContext";
 import { useState } from "react";
 const Sidebar = ({ selectedIcon, setSelectedIcon }) => {
+  const { user } = useContext(AuthContext);
   return (
     <div className="w-20 h-full flex flex-col items-center py-8 bg-white/10 backdrop-blur-md border-r border-white/20">
       <div className="relative mb-10">
         <p className="w-12 h-12 rounded-full bg-gray-500 flex items-center justify-center text-white font-bold text-2xl">
-          {"U"}
+          {user?.name.charAt(0).toUpperCase() || "U"}
         </p>
         <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-gray-800"></span>
       </div>

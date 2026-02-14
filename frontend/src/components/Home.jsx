@@ -5,10 +5,14 @@ import SettingsList from "./SettingsList";
 import UserList from "./UserList";
 import NotificationList from "./NotificationList";
 import { useState } from "react";
+import { useContext } from "react";
+import { AuthContext } from "../AuthContext";
 
 const Home = () => {
+  const [selectedFriend, setSelectedFriend] = useState({});
   const [selectedIcon, setSelectedIcon] = useState("messages");
-  const [selectedUser, setSelectedUser] = useState(null);
+  const [conversationId, setConversationId] = useState(null);
+  const { user } = useContext(AuthContext);
   return (
     <>
       <div className="bg-black flex h-screen">
@@ -18,15 +22,21 @@ const Home = () => {
         />
         {selectedIcon === "messages" && (
           <ChatList
-            setSelectedUser={setSelectedUser}
-            selectedUser={selectedUser}
+            user={user}
+            selectedFriend={selectedFriend}
+            setSelectedFriend={setSelectedFriend}
+            conversationId={conversationId}
+            setConversationId={setConversationId}
           />
         )}
         {selectedIcon === "notifications" && <NotificationList />}
         {selectedIcon === "settings" && <SettingsList />}
         {selectedIcon === "users" && <UserList />}
-        {selectedUser !== null ? (
-          <ChatWindow selectedUser={selectedUser} />
+        {Object.keys(selectedFriend).length > 0 ? (
+          <ChatWindow
+            selectedFriend={selectedFriend}
+            conversationId={conversationId}
+          />
         ) : (
           <div className="flex-1 flex items-center justify-center text-white">
             <h2 className="text-2xl font-semibold">

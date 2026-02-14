@@ -2,6 +2,7 @@ import express from "express";
 import User from "../models/userModels.js";
 import FriendRequest from "../models/friendRequest.js";
 import auth from "../middleware/auth.js";
+import Conversation from "../models/conversation.js";
 
 const router = express.Router();
 
@@ -82,7 +83,7 @@ router.delete("/remove/:userId", auth, async (req, res) => {
     });
 
     res.json({ msg: "Friend removed" });
-  } catch {
+  } catch (err) {
     res.status(500).json({ msg: "Error removing friend" });
   }
 });
@@ -118,7 +119,7 @@ router.post("/request/:userId", auth, async (req, res) => {
     });
 
     res.json({ msg: "Request sent" });
-  } catch {
+  } catch (err) {
     res.status(500).json({ msg: "Error sending request" });
   }
 });
