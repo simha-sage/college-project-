@@ -1,4 +1,5 @@
 import { useState } from "react";
+const API_URL = import.meta.env.VITE_server || "http://localhost:5000";
 
 export default function AuthForm() {
   const [signup, setSignup] = useState(false);
@@ -7,7 +8,7 @@ export default function AuthForm() {
   const [password, setPassword] = useState("");
   const signIn = async () => {
     try {
-      const res = await fetch("http://localhost:5000/auth/login", {
+      const res = await fetch(`${API_URL}/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -24,7 +25,7 @@ export default function AuthForm() {
   };
   const signUp = async () => {
     try {
-      const res = await fetch("http://localhost:5000/auth/signup", {
+      const res = await fetch(`${API_URL}/auth/signup`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

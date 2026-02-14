@@ -1,6 +1,6 @@
 import { Routes, Route } from "react-router-dom";
 import AuthForm from "./components/AuthForm";
-import Home from "./components/home";
+import Home from "./components/Home";
 import ProtectedRoute from "./ProtectedRoute";
 
 function App() {

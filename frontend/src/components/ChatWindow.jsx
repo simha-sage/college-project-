@@ -1,9 +1,9 @@
 import { Smile, Send } from "lucide-react";
 import { useState, useEffect, useContext } from "react";
 import { AuthContext } from "../AuthContext";
+const API_URL = import.meta.env.VITE_server || "http://localhost:5000";
 
 import { socket } from "../socket";
-
 
 const Message = ({ text, time, isMe }) => {
   const formattedTime = new Date(time).toLocaleTimeString([], {
@@ -35,34 +35,29 @@ const ChatWindow = ({ selectedFriend, conversationId }) => {
   const [messages, setMessages] = useState([]);
   const { user } = useContext(AuthContext);
 
-  useEffect(()=>{
-  if(conversationId){
-    socket.emit("joinChat", conversationId);
-  }
-},[conversationId]);
+  useEffect(() => {
+    if (conversationId) {
+      socket.emit("joinChat", conversationId);
+    }
+  }, [conversationId]);
 
-useEffect(()=>{
-  socket.on("newMessage",(msg)=>{
-    setMessages(prev => [...prev,msg]);
-  });
+  useEffect(() => {
+    socket.on("newMessage", (msg) => {
+      setMessages((prev) => [...prev, msg]);
+    });
 
-  return ()=>{
-    socket.off("newMessage");
-  };
-},[]);
-
-
+    return () => {
+      socket.off("newMessage");
+    };
+  }, []);
 
   useEffect(() => {
     const fetchMsgs = async () => {
       try {
         console.log("Fetching messages for convo with", conversationId);
-        const res = await fetch(
-          `http://localhost:5000/messages/${conversationId}`,
-          {
-            credentials: "include",
-          },
-        );
+        const res = await fetch(`${API_URL}/messages/${conversationId}`, {
+          credentials: "include",
+        });
 
         if (!res.ok) throw new Error("Failed");
 
@@ -83,12 +78,12 @@ useEffect(()=>{
     fetchMsgs();
   }, []);
   const sendMsg = async () => {
-    socket.emit("sendMessage",{
-    conversationId,
-    sender:user._id,
-    text:text
-  });
-  setText("");
+    socket.emit("sendMessage", {
+      conversationId,
+      sender: user._id,
+      text: text,
+    });
+    setText("");
   };
 
   return (
@@ -108,7 +103,6 @@ useEffect(()=>{
       </div>
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto py-8 space-y-4 px-4">
-        
         {messages.map((msg) => (
           <Message
             key={msg._id}

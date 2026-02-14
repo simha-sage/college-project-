@@ -13,26 +13,22 @@ router.post("/:receiverId", auth, async (req, res) => {
 
     if (!text) return res.status(400).json({ msg: "Text required" });
 
-    // find existing convo
     let convo = await Conversation.findOne({
       members: { $all: [senderId, receiverId] },
     });
 
-    // create if not exists
     if (!convo) {
       convo = await Conversation.create({
         members: [senderId, receiverId],
       });
     }
 
-    // create message
     const message = await Message.create({
       conversationId: convo._id,
       sender: senderId,
       text,
     });
 
-    // update convo metadata
     convo.lastMessage = text;
     convo.lastMessageAt = new Date();
     await convo.save();
@@ -42,7 +38,5 @@ router.post("/:receiverId", auth, async (req, res) => {
     res.status(500).json({ msg: "Send failed" });
   }
 });
-
-
 
 export default router;

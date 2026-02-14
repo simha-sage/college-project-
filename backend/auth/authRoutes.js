@@ -3,6 +3,9 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/userModels.js";
 import auth from "../middleware/auth.js";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const router = express.Router();
 
@@ -13,7 +16,8 @@ router.get("/me", auth, async (req, res) => {
     if (!user) return res.status(404).json({ msg: "User not found" });
 
     res.json(user);
-  } catch {
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ msg: "Server error" });
   }
 });
@@ -34,12 +38,13 @@ router.post("/login", async (req, res) => {
 
     res.cookie("token", token, {
       httpOnly: true,
-      secure: false,
-      sameSite: "lax",
+      secure: process.env.PRODUCTION === "true",
+      sameSite: process.env.PRODUCTION === "true" ? "none" : "lax",
     });
 
     res.json({ msg: "Login success" });
-  } catch {
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ msg: "Error" });
   }
 });
@@ -64,12 +69,13 @@ router.post("/signup", async (req, res) => {
 
     res.cookie("token", token, {
       httpOnly: true,
-      secure: false,
-      sameSite: "lax",
+      secure: process.env.PRODUCTION === "true",
+      sameSite: process.env.PRODUCTION === "true" ? "none" : "lax",
     });
 
     res.json({ msg: "Signup success" });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ msg: "Error" });
   }
 });

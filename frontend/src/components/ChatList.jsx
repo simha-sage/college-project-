@@ -1,5 +1,6 @@
 import { Search } from "lucide-react";
 import { useState, useEffect, use } from "react";
+const API_URL = import.meta.env.VITE_server || "http://localhost:5000";
 const ContactTemplete = ({
   friend,
   lastMessage,
@@ -36,12 +37,9 @@ const ChatList = ({
   useEffect(() => {
     const fetchConvos = async () => {
       try {
-        const res = await fetch(
-          "http://localhost:5000/convos/myConversations",
-          {
-            credentials: "include",
-          },
-        );
+        const res = await fetch(`${API_URL}/convos/myConversations`, {
+          credentials: "include",
+        });
 
         if (!res.ok) throw new Error("Failed");
 
@@ -58,7 +56,7 @@ const ChatList = ({
   useEffect(() => {
     const fetchFriends = async () => {
       try {
-        const res = await fetch("http://localhost:5000/friend/friends", {
+        const res = await fetch(`${API_URL}/friend/friends`, {
           credentials: "include",
         });
 
