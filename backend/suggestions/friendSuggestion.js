@@ -40,5 +40,12 @@ router.get("/suggestions", auth, async (req, res) => {
     res.status(500).json({ msg: "Error loading users" });
   }
 });
+router.put("/updateProfile", auth, async (req, res) => {
+  const { bio } = req.body;
+
+  await User.findByIdAndUpdate(req.user.id, { bio });
+
+  res.json({ msg: "Updated" });
+});
 
 export default router;

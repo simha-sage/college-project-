@@ -1,23 +1,16 @@
-import { Routes, Route } from "react-router-dom";
+import { useContext } from "react";
+import { AuthContext } from "./AuthContext";
 import AuthForm from "./components/AuthForm";
 import Home from "./components/Home";
-import ProtectedRoute from "./ProtectedRoute";
 
 function App() {
-  return (
-    <Routes>
-      <Route path="/login" element={<AuthForm />} />
+  const { user, loading } = useContext(AuthContext);
 
-      <Route
-        path="/"
-        element={
-          <ProtectedRoute>
-            <Home />
-          </ProtectedRoute>
-        }
-      />
-    </Routes>
-  );
+  if (loading) {
+    return <div className="text-white">Loading...</div>;
+  }
+
+  return user ? <Home /> : <AuthForm />;
 }
 
 export default App;
