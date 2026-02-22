@@ -42,7 +42,14 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    checkAuth();
+    const keepAlive = setInterval(
+      () => {
+        checkAuth();
+      },
+      5 * 60 * 1000,
+    ); // Every 5 minutes
+
+    return () => clearInterval(keepAlive);
   }, []);
 
   // Socket Logic: Connect when user exists, disconnect when they leave
