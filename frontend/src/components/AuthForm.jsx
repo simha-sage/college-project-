@@ -182,7 +182,7 @@ export default function AuthForm() {
         <div
           className={`absolute top-0 left-0 w-1/2 h-full bg-linear-to-br from-pink-600 to-purple-700
  backdrop-blur-xl text-white flex flex-col justify-center items-center text-center px-12 transition-all duration-700 ease-in-out
-          ${signup ? "translate-x-full" : "translate-x-0"}`}
+          ${!signup ? "translate-x-full" : "translate-x-0"}`}
         >
           {signup ? (
             <>

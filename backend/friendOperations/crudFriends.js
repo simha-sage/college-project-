@@ -51,6 +51,18 @@ router.post("/add/:userId", auth, async (req, res) => {
 
     if (!request) return res.status(400).json({ msg: "No request found" });
 
+    const exists = await Conversation.findOne({
+      members: { $all: [myId, friendId] },
+    });
+
+    if (!exists) {
+      await Conversation.create({
+        members: [myId, friendId],
+        lastMessage: "Say hi!",
+        lastMessageAt: null,
+      });
+    }
+
     // update both users
     await User.findByIdAndUpdate(myId, {
       $addToSet: { friends: friendId },
