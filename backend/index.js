@@ -28,15 +28,23 @@ const io = new Server(server, {
   },
 });
 
-io.on("connection", (socket) => {
-  console.log("User connected:", socket.id);
+const userSocketMap = {};
 
-  // join conversation room
+io.on("connection", (socket) => {
+  const userId = socket.handshake.query.userId;
+
+  if (userId && userId !== "undefined") {
+    userSocketMap[userId] = socket.id;
+    console.log(`User ${userId} is online.`);
+  }
+
+  // 3. Tell everyone who is currently online
+  io.emit("getOnlineUsers", Object.keys(userSocketMap));
+
   socket.on("joinChat", (conversationId) => {
     socket.join(conversationId);
   });
 
-  // send message
   socket.on("sendMessage", async (data) => {
     const { conversationId, sender, text } = data;
 
@@ -57,7 +65,13 @@ io.on("connection", (socket) => {
   });
 
   socket.on("disconnect", () => {
-    console.log("User disconnected");
+    // 4. Clean up the map when they leave
+    if (userId) {
+      delete userSocketMap[userId];
+      console.log(`User ${userId} went offline.`);
+      // 5. Broadcast the updated list
+      io.emit("getOnlineUsers", Object.keys(userSocketMap));
+    }
   });
 });
 

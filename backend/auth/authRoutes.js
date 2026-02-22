@@ -79,5 +79,14 @@ router.post("/signup", async (req, res) => {
     res.status(500).json({ msg: "Error" });
   }
 });
+router.post("/logout", (req, res) => {
+  res.clearCookie("token", {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.PRODUCTION === "true",
+  });
+
+  res.json({ msg: "Logged out" });
+});
 
 export default router;

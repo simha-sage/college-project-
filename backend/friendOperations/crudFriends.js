@@ -69,6 +69,31 @@ router.post("/add/:userId", auth, async (req, res) => {
   }
 });
 
+router.post("/delete/:userId", auth, async (req, res) => {
+  try {
+    const myId = req.user.id;
+    const friendId = req.params.userId;
+
+    if (myId === friendId)
+      return res.status(400).json({ msg: "Cannot delete yourself" });
+
+    // check request exists
+    const request = await FriendRequest.findOne({
+      sender: friendId,
+      receiver: myId,
+      status: "pending",
+    });
+
+    if (!request) return res.status(400).json({ msg: "No request found" });
+
+    request.status = "rejected";
+    await request.save();
+
+    res.json({ msg: "Friend request rejected" });
+  } catch (err) {
+    res.status(500).json({ msg: "Error rejecting friend request" });
+  }
+});
 router.delete("/remove/:userId", auth, async (req, res) => {
   try {
     const myId = req.user.id;

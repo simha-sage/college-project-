@@ -1,29 +1,41 @@
 import React from "react";
 import { useState, useEffect } from "react";
 const API_URL = import.meta.env.VITE_server || "http://localhost:5000";
-const FriendRequestTemplate = ({ name, email, profilePic, id }) => {
+const FriendRequestTemplate = ({
+  name,
+  email,
+  profilePic,
+  senderId,
+  setRequests,
+}) => {
   const onAccept = async () => {
     try {
-      const res = await fetch(`${API_URL}/friend/add/${id}`, {
+      const res = await fetch(`${API_URL}/friend/add/${senderId}`, {
         method: "POST",
         credentials: "include",
       });
 
       const data = await res.json();
       console.log(data);
+      setRequests((prevRequests) =>
+        prevRequests.filter((req) => req.sender._id !== senderId),
+      );
     } catch (err) {
       console.error(err);
     }
   };
   const onDelete = async () => {
     try {
-      const res = await fetch(`${API_URL}/friend/remove/${id}`, {
-        method: "DELETE",
+      const res = await fetch(`${API_URL}/friend/delete/${senderId}`, {
+        method: "POST",
         credentials: "include",
       });
 
       const data = await res.json();
       console.log(data);
+      setRequests((prevRequests) =>
+        prevRequests.filter((req) => req.sender._id !== senderId),
+      );
     } catch (err) {
       console.error(err);
     }
@@ -131,7 +143,7 @@ const UserList = ({ chats }) => {
 
   useEffect(() => {
     fetchRequests();
-  }, []);
+  }, [requests.length]);
 
   const fetchSuggestions = async () => {
     try {
@@ -168,9 +180,11 @@ const UserList = ({ chats }) => {
           <FriendRequestTemplate
             key={request._id}
             name={request.sender.name}
-            id={request.sender._id}
+            senderId={request.sender._id}
             email={request.sender.email}
             profilePic={request.sender.profilePic}
+            requests={requests}
+            setRequests={setRequests}
           />
         ))}
       </section>

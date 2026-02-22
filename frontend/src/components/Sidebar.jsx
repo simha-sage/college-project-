@@ -1,9 +1,20 @@
 import { UserPlus, Bell, MessageSquare, Settings, LogOut } from "lucide-react";
 import { useContext } from "react";
 import { AuthContext } from "../AuthContext";
-import { useState } from "react";
+const API_URL = import.meta.env.VITE_server;
 const Sidebar = ({ selectedIcon, setSelectedIcon }) => {
-  const { user } = useContext(AuthContext);
+  const { user, setUser } = useContext(AuthContext);
+
+  const logout = async () => {
+    await fetch(`${API_URL}/auth/logout`, {
+      method: "POST",
+      credentials: "include",
+    });
+
+    //socket.disconnect();
+    setUser(null);
+  };
+
   return (
     <div className="w-20 h-full flex flex-col items-center py-8 bg-white/10 backdrop-blur-md border-r border-white/20">
       <div className="relative mb-10">
@@ -40,7 +51,11 @@ const Sidebar = ({ selectedIcon, setSelectedIcon }) => {
       </div>
       <button
         className="mt-auto text-white/60 hover:text-red-400"
-        onClick={() => window.confirm("Are you sure you want to log out?")}
+        onClick={() => {
+          if (window.confirm("Are you sure you want to log out?")) {
+            logout();
+          }
+        }}
       >
         <LogOut size={24} strokeWidth={1.5} />
       </button>
