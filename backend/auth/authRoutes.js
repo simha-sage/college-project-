@@ -37,7 +37,7 @@ router.post("/login", async (req, res) => {
     });
 
     res.cookie("token", token, {
-      httpOnly: true,
+      httpOnly: process.env.PRODUCTION === "true",
       secure: process.env.PRODUCTION === "true",
       sameSite: process.env.PRODUCTION === "true" ? "none" : "lax",
     });
@@ -68,7 +68,7 @@ router.post("/signup", async (req, res) => {
     });
 
     res.cookie("token", token, {
-      httpOnly: true,
+      httpOnly: process.env.PRODUCTION === "true",
       secure: process.env.PRODUCTION === "true",
       sameSite: process.env.PRODUCTION === "true" ? "none" : "lax",
     });
@@ -81,8 +81,8 @@ router.post("/signup", async (req, res) => {
 });
 router.post("/logout", (req, res) => {
   res.clearCookie("token", {
-    httpOnly: true,
-    sameSite: "lax",
+    httpOnly: process.env.PRODUCTION === "true",
+    sameSite: process.env.PRODUCTION === "true" ? "none" : "lax",
     secure: process.env.PRODUCTION === "true",
   });
 
