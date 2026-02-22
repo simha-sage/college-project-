@@ -30,6 +30,16 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
     }
   };
+  useEffect(() => {
+    const keepAlive = setInterval(
+      () => {
+        fetch(`${API_URL}/ping`).catch(() => {});
+      },
+      10 * 60 * 1000,
+    ); // Every 10 minutes
+
+    return () => clearInterval(keepAlive);
+  }, []);
 
   useEffect(() => {
     checkAuth();
