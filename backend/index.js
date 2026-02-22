@@ -91,7 +91,6 @@ app.use("/friend", crudFriends);
 app.use("/message", sendMsg);
 app.use("/convos", conversations);
 app.use("/messages", getChats);
-app.get("/ping", (req, res) => res.send("pong"));
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB connected"));

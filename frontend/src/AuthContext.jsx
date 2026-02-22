@@ -33,7 +33,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const keepAlive = setInterval(
       () => {
-        fetch(`${API_URL}/ping`).catch(() => {});
+        fetch(`${API_URL}/auth/ping`).catch(() => {});
       },
       10 * 60 * 1000,
     ); // Every 10 minutes

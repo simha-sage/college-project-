@@ -9,6 +9,10 @@ dotenv.config();
 
 const router = express.Router();
 
+router.get("/ping", (req, res) => {
+  res.status(200).send("pong");
+});
+
 router.get("/me", auth, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");
@@ -37,7 +41,7 @@ router.post("/login", async (req, res) => {
     });
 
     res.cookie("token", token, {
-      httpOnly: process.env.PRODUCTION !== "true",
+      httpOnly: true,
       secure: process.env.PRODUCTION === "true",
       sameSite: process.env.PRODUCTION === "true" ? "none" : "lax",
     });
@@ -68,7 +72,7 @@ router.post("/signup", async (req, res) => {
     });
 
     res.cookie("token", token, {
-      httpOnly: process.env.PRODUCTION !== "true",
+      httpOnly: true,
       secure: process.env.PRODUCTION === "true",
       sameSite: process.env.PRODUCTION === "true" ? "none" : "lax",
     });
@@ -81,7 +85,7 @@ router.post("/signup", async (req, res) => {
 });
 router.post("/logout", (req, res) => {
   res.clearCookie("token", {
-    httpOnly: process.env.PRODUCTION !== "true",
+    httpOnly: true,
     sameSite: process.env.PRODUCTION === "true" ? "none" : "lax",
     secure: process.env.PRODUCTION === "true",
   });
