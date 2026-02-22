@@ -84,7 +84,7 @@ const ChatList = ({
       </div>
 
       <section>
-        <h3 className="text-white font-semibold mb-4">Friends</h3>
+        <h3 className="text-white font-semibold mb-4">Chats</h3>
         {/* Map through your group data here */}
         {conversations.map((convo) => (
           <ContactTemplete
