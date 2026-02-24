@@ -125,9 +125,19 @@ const ChatWindow = ({ selectedFriend, conversationId }) => {
       <div className="flex items-center justify-between bg-white/10 p-4 rounded-2xl backdrop-blur-md">
         <div className="flex items-center gap-3">
           <div className="relative">
-            <p className="w-12 h-12 rounded-full bg-gray-500 flex items-center justify-center text-white font-bold text-2xl">
-              {selectedFriend?.name?.charAt(0)}
-            </p>
+            <div className="w-12 h-12 flex-shrink-0 rounded-full overflow-hidden border border-white/20 bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+              {selectedFriend?.profilePic ? (
+                <img
+                  src={selectedFriend.profilePic}
+                  alt={selectedFriend.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="text-white font-bold text-lg">
+                  {selectedFriend?.name?.charAt(0).toUpperCase()}
+                </span>
+              )}
+            </div>
             {/* Online indicator dot */}
             {isOnline && (
               <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-zinc-900 rounded-full"></span>

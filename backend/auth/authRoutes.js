@@ -9,6 +9,59 @@ dotenv.config();
 
 const router = express.Router();
 
+import { upload } from "../cloudinary.js";
+
+// PUT: /auth/updateProfile
+router.put(
+  "/updateProfile",
+  auth, // Good: Middleware order is correct
+  upload.single("profilePic"),
+  async (req, res) => {
+    try {
+      const { name, bio, gender, password } = req.body;
+      const userId = req.user?.id;
+
+      if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+      // Use an object to track only fields that are actually sent
+      const updateData = {};
+      if (name) updateData.name = name;
+      if (bio !== undefined) updateData.bio = bio; // bio can be an empty string
+      if (gender) updateData.gender = gender;
+
+      // 1. Handle Cloudinary Image
+      if (req.file) {
+        updateData.profilePic = req.file.path;
+      }
+
+      // 2. Hash password only if it's new and not empty
+      if (password && password.trim() !== "") {
+        const salt = await bcrypt.genSalt(10);
+        updateData.password = await bcrypt.hash(password, salt);
+      }
+
+      // 3. Update Database
+      const updatedUser = await User.findByIdAndUpdate(
+        userId,
+        { $set: updateData },
+        { new: true, runValidators: true },
+      ).select("-password");
+
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.status(200).json({
+        message: "Profile updated successfully",
+        user: updatedUser,
+      });
+    } catch (err) {
+      console.error("Update Error:", err);
+      res.status(500).json({ message: "Internal Server Error" });
+    }
+  },
+);
+
 router.get("/ping", (req, res) => {
   res.status(200).send("pong");
 });

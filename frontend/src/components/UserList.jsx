@@ -1,6 +1,7 @@
 import React from "react";
 import { useState, useEffect } from "react";
 const API_URL = import.meta.env.VITE_server || "http://localhost:5000";
+
 const FriendRequestTemplate = ({
   name,
   email,
@@ -8,76 +9,85 @@ const FriendRequestTemplate = ({
   senderId,
   setRequests,
 }) => {
-  const onAccept = async () => {
+  const [loading, setLoading] = useState(false);
+
+  const handleAction = async (type) => {
+    setLoading(true);
+    const endpoint = type === "accept" 
+      ? `${API_URL}/friend/add/${senderId}` 
+      : `${API_URL}/friend/delete/${senderId}`;
+
     try {
-      const res = await fetch(`${API_URL}/friend/add/${senderId}`, {
+      const res = await fetch(endpoint, {
         method: "POST",
         credentials: "include",
       });
 
-      const data = await res.json();
-      console.log(data);
-      setRequests((prevRequests) =>
-        prevRequests.filter((req) => req.sender._id !== senderId),
-      );
+      if (res.ok) {
+        // Optimistically remove from list
+        setRequests((prev) => prev.filter((req) => req.sender._id !== senderId));
+      }
     } catch (err) {
-      console.error(err);
-    }
-  };
-  const onDelete = async () => {
-    try {
-      const res = await fetch(`${API_URL}/friend/delete/${senderId}`, {
-        method: "POST",
-        credentials: "include",
-      });
-
-      const data = await res.json();
-      console.log(data);
-      setRequests((prevRequests) =>
-        prevRequests.filter((req) => req.sender._id !== senderId),
-      );
-    } catch (err) {
-      console.error(err);
+      console.error(`Error during ${type}:`, err);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="bg-white/10 p-4 rounded-2xl mb-4 border border-white/10 hover:bg-white/20 transition flex items-center">
-      {/* Avatar */}
-      <p className="w-12 h-12 rounded-full bg-gray-500 flex items-center justify-center text-white font-bold text-2xl">
-        {name.charAt(0).toUpperCase()}
-      </p>
-
-      {/* User Info */}
-      <div className="ml-4 flex-1">
-        <p className="text-white text-sm font-medium">{name}</p>
-        {email && <p className="text-white/50 text-xs">{email}</p>}
+    <div className="bg-white/5 backdrop-blur-md p-4 rounded-2xl mb-3 border border-white/10 hover:bg-white/10 transition flex items-center group">
+      {/* Profile Image / Fallback */}
+      <div className="w-12 h-12 flex-shrink-0 rounded-full overflow-hidden border border-white/20 bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+        {profilePic ? (
+          <img
+            src={profilePic}
+            alt={name}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <span className="text-white font-bold text-lg">
+            {name?.charAt(0).toUpperCase()}
+          </span>
+        )}
       </div>
 
-      {/* Actions */}
-      <div className="flex gap-2">
+      {/* Info - min-w-0 and truncate prevents layout breaking */}
+      <div className="ml-4 flex-1 min-w-0">
+        <p className="text-white text-sm font-semibold truncate">
+          {name}
+        </p>
+        {email && <p className="text-white/40 text-xs truncate">{email}</p>}
+      </div>
+
+      {/* Buttons */}
+      <div className="flex gap-2 ml-4">
         <button
-          onClick={onAccept}
-          className="px-3 py-1  bg-green-500 hover:bg-green-600 text-white rounded-lg"
+          onClick={() => handleAction("accept")}
+          disabled={loading}
+          className="px-4 py-1.5 bg-green-600 hover:bg-green-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-green-900/20"
         >
-          Accept
+          {loading ? "..." : "Accept"}
         </button>
 
         <button
-          onClick={onDelete}
-          className="px-3 py-1  bg-red-500 hover:bg-red-600 text-white rounded-lg"
+          onClick={() => handleAction("reject")}
+          disabled={loading}
+          className="px-4 py-1.5 bg-white/10 hover:bg-red-500/20 hover:text-red-500 disabled:opacity-50 text-white/70 text-xs font-bold rounded-xl transition-all border border-white/10"
         >
-          Delete
+          {loading ? "..." : "Delete"}
         </button>
       </div>
     </div>
   );
 };
 
-const AddFriendTemplate = ({ name, email, id }) => {
+const AddFriendTemplate = ({ name, email, id, profilePic }) => {
   const [status, setStatus] = useState("add");
 
   const handleAdd = async () => {
+    // Prevent multiple clicks
+    if (status === "pending") return;
+
     setStatus("pending");
     try {
       const res = await fetch(`${API_URL}/friend/request/${id}`, {
@@ -85,45 +95,67 @@ const AddFriendTemplate = ({ name, email, id }) => {
         headers: { "Content-Type": "application/json" },
         credentials: "include",
       });
+
+      if (!res.ok) throw new Error("Request failed");
+
       const data = await res.json();
-      console.log(data);
+      console.log("Friend request sent:", data);
     } catch (err) {
       console.error(err);
-      setStatus("add");
+      setStatus("add"); // Re-enable if it fails
     }
   };
 
   return (
-    <div className="bg-white/10 p-4 rounded-2xl mb-4 border border-white/10 flex items-center">
-      {/* dp */}
-      <p className="w-12 h-12 rounded-full bg-gray-500 flex items-center justify-center text-white font-bold text-2xl">
-        {name.charAt(0).toUpperCase()}
-      </p>
-
-      <div className="ml-4 flex-1">
-        <p className="text-white text-sm font-medium">
-          {name.charAt(0).toUpperCase() + name.slice(1)}
-        </p>
-        <p className="text-white/50 text-xs">{email}</p>
+    <div className="bg-white/5 backdrop-blur-md p-5 rounded-2xl mb-3 border border-white/10 flex items-center hover:bg-white/10 transition-colors">
+      {/* Profile Picture / Initials */}
+      <div className="w-12 h-12 rounded-full flex-shrink-0 bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center overflow-hidden border border-white/20">
+        {profilePic ? (
+          <img
+            src={profilePic}
+            alt={name}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <span className="text-white font-bold text-lg">
+            {name?.charAt(0).toUpperCase()}
+          </span>
+        )}
       </div>
 
+      {/* User Info */}
+      <div className="ml-4 flex-1 min-w-0">
+        <p className="text-white text-sm font-semibold truncate">
+          {name.charAt(0).toUpperCase() + name.slice(1)}
+        </p>
+        <p className="text-white/40 text-xs truncate">{email}</p>
+      </div>
+
+      {/* Action Button */}
       <button
         onClick={handleAdd}
         disabled={status === "pending"}
-        className={`px-4 py-1  rounded-lg text-white transition
+        className={`ml-4 px-5 py-1.5 rounded-xl text-xs font-bold transition-all transform active:scale-95
           ${
             status === "pending"
-              ? "bg-gray-500 cursor-not-allowed"
-              : "bg-blue-500 hover:bg-blue-600"
+              ? "bg-white/10 text-white/50 cursor-not-allowed border border-white/5"
+              : "bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/20"
           }`}
       >
-        {status === "pending" ? "Pending" : "Add"}
+        {status === "pending" ? (
+          <span className="flex items-center gap-1">
+            <span className="w-1.5 h-1.5 bg-white/50 rounded-full animate-pulse"></span>
+            Pending
+          </span>
+        ) : (
+          "Add Friend"
+        )}
       </button>
     </div>
   );
 };
 
-const UserList = ({ chats }) => {
+const UserList = () => {
   const [suggestions, setSuggestions] = useState([]);
   const [requests, setRequests] = useState([]);
   const fetchRequests = async () => {
@@ -195,6 +227,7 @@ const UserList = ({ chats }) => {
           <AddFriendTemplate
             key={person._id}
             name={person.name}
+            profilePic={person.profilePic}
             id={person._id}
             email={person.email}
           />

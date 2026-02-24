@@ -18,9 +18,19 @@ const Sidebar = ({ selectedIcon, setSelectedIcon }) => {
   return (
     <div className="w-20 h-full flex flex-col items-center py-8 bg-white/10 backdrop-blur-md border-r border-white/20">
       <div className="relative mb-10">
-        <p className="w-12 h-12 rounded-full bg-gray-500 flex items-center justify-center text-white font-bold text-2xl">
-          {user?.name.charAt(0).toUpperCase() || "U"}
-        </p>
+        <div className="w-12 h-12 flex-shrink-0 rounded-full overflow-hidden border border-white/20 bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+          {user?.profilePic ? (
+            <img
+              src={user.profilePic}
+              alt={user.name}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <span className="text-white font-bold text-lg">
+              {user?.name?.charAt(0).toUpperCase()}
+            </span>
+          )}
+        </div>
         <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-gray-800"></span>
       </div>
       <div className="flex flex-col gap-8 text-white/60">

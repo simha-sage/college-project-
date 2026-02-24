@@ -16,9 +16,19 @@ const ContactTemplete = ({
       setConversationId(conversationId);
     }}
   >
-    <p className="w-12 h-12 rounded-full bg-gray-500 flex items-center justify-center text-white font-bold text-2xl">
-      {friend.name.charAt(0)}
-    </p>
+    <div className="w-12 h-12 flex-shrink-0 rounded-full overflow-hidden border border-white/20 bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+      {friend.profilePic ? (
+        <img
+          src={friend.profilePic}
+          alt={friend.name}
+          className="w-full h-full object-cover"
+        />
+      ) : (
+        <span className="text-white font-bold text-lg">
+          {friend.name?.charAt(0).toUpperCase()}
+        </span>
+      )}
+    </div>
     <div className="ml-4 flex-1">
       <p className="text-white text-sm font-medium">{friend.name}</p>
       <p className="text-white/50 text-xs truncate">{lastMessage}</p>
