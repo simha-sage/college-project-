@@ -1,6 +1,8 @@
 import { Smile, Send } from "lucide-react";
 import { useState, useEffect, useContext } from "react";
 import { AuthContext } from "../AuthContext";
+import EmojiPicker from "emoji-picker-react";
+
 const API_URL = import.meta.env.VITE_server || "http://localhost:5000";
 
 import { useRef } from "react";
@@ -57,6 +59,25 @@ const Message = ({ text, time, isMe }) => {
 };
 
 const ChatWindow = ({ selectedFriend, conversationId }) => {
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const emojiPickerRef = useRef(null);
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        emojiPickerRef.current &&
+        !emojiPickerRef.current.contains(event.target)
+      ) {
+        setShowEmojiPicker(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+  const onEmojiClick = (emojiData) => {
+    setText((prev) => prev + emojiData.emoji);
+    // Optional: Keep picker open or close it
+    // setShowEmojiPicker(false);
+  };
   const [text, setText] = useState("");
   const [messages, setMessages] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
@@ -68,14 +89,11 @@ const ChatWindow = ({ selectedFriend, conversationId }) => {
 
   const fetchSuggestions = async (lastMessage, isOwnMessage) => {
     try {
-      const response = await fetch(
-        "http://localhost:5000/ai/generate-replies",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: lastMessage, isOwnMessage }),
-        },
-      );
+      const response = await fetch(`${API_URL}/ai/generate-replies`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: lastMessage, isOwnMessage }),
+      });
       const data = await response.json();
       setSuggestions(data); // Assuming you have a state for suggestions
       console.log("AI Suggestions:", data);
@@ -188,7 +206,21 @@ const ChatWindow = ({ selectedFriend, conversationId }) => {
       <ChatContainer messages={messages} user={user} />
 
       {/* Input Area */}
-      <div className="mt-auto flex flex-col gap-3">
+      <div className="mt-auto flex flex-col gap-3 relative">
+        {showEmojiPicker && (
+          <div
+            ref={emojiPickerRef}
+            className="absolute bottom-20 left-0 z-50 shadow-2xl animate-in fade-in slide-in-from-bottom-4"
+          >
+            <EmojiPicker
+              theme="dark"
+              onEmojiClick={onEmojiClick}
+              autoFocusSearch={false}
+              width={300}
+              height={400}
+            />
+          </div>
+        )}
         {/* AI Suggestions Bar */}
         {suggestions.length > 0 && (
           <div className="flex gap-2 px-2 overflow-x-auto no-scrollbar animate-fade-in">
@@ -212,7 +244,8 @@ const ChatWindow = ({ selectedFriend, conversationId }) => {
         <div className="flex items-center gap-4 bg-white/10 p-3 rounded-2xl border border-white/20 shadow-lg backdrop-blur-sm">
           <Smile
             size={20}
-            className="text-white/70 cursor-pointer hover:text-white"
+            className={`${showEmojiPicker ? "text-yellow-400" : "text-white/70"} cursor-pointer hover:text-white transition-colors`}
+            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
           />
           <input
             className="flex-1 bg-transparent text-white outline-none placeholder:text-white/40"
