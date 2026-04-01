@@ -33,11 +33,14 @@ const Settings = () => {
       if (password) formData.append("password", password); // Only send if changed
       if (profilePic) formData.append("profilePic", profilePic);
 
-      const res = await fetch("http://localhost:5000/auth/updateProfile", {
-        method: "PUT",
-        credentials: "include",
-        body: formData, // Fetch automatically sets Content-Type for FormData
-      });
+      const res = await fetch(
+        `${process.env.REACT_APP_API_URL}/auth/updateProfile`,
+        {
+          method: "PUT",
+          credentials: "include",
+          body: formData, // Fetch automatically sets Content-Type for FormData
+        },
+      );
 
       const data = await res.json();
       if (res.ok) {
@@ -53,7 +56,7 @@ const Settings = () => {
   };
 
   const logout = async () => {
-    await fetch("http://localhost:5000/auth/logout", {
+    await fetch(`${process.env.REACT_APP_API_URL}/auth/logout`, {
       credentials: "include",
     });
     setUser(null);
