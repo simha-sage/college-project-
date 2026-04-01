@@ -44,7 +44,7 @@ const Settings = () => {
 
       // --- THE FIX ---
       // 1. Read the raw text of the response first
-      const responseText = await res.text();
+      const responseText = res.text ? await res.text() : null;
 
       // 2. Safely parse the text into JSON if it exists, otherwise use an empty object
       const data = responseText ? JSON.parse(responseText) : {};
