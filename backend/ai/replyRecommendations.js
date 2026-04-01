@@ -11,7 +11,20 @@ dotenv.config();
 router.post("/refineTone", async (req, res) => {
   try {
     const { text, tone } = req.body; // tone: 'professional', 'casual', 'funny', 'short'
+    const allowedTones = ["professional", "casual", "funny", "short"];
 
+    if (typeof text !== "string" || text.trim() === "") {
+      return res
+        .status(400)
+        .json({ error: "Invalid or missing 'text' parameter." });
+    }
+
+    if (typeof tone !== "string" || !allowedTones.includes(tone)) {
+      return res.status(400).json({
+        error:
+          "Invalid or missing 'tone' parameter. Allowed values are: professional, casual, funny, short.",
+      });
+    }
     const prompt = `
       Rewrite the following chat message to sound more ${tone}.
       Original Message: "${text}"
@@ -22,14 +35,14 @@ router.post("/refineTone", async (req, res) => {
       - Return ONLY the rewritten string, no extra text.
     `;
     const result = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-2.5-flash-lite",
       contents: prompt,
     });
-
-    const refinedText = result.text().trim();
+    const refinedText = result.text.trim();
 
     res.status(200).json({ refinedText });
   } catch (error) {
+    console.error("Error refining tone:", error);
     res.status(500).json({ error: "Failed to refine tone" });
   }
 });
@@ -67,7 +80,7 @@ router.post("/generate-replies", async (req, res) => {
 
     // 3. Generate Content
     const result = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-2.5-flash-lite",
       contents: prompt,
     });
 
