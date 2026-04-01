@@ -8,6 +8,32 @@ const router = express.Router();
 import dotenv from "dotenv";
 dotenv.config();
 
+router.post("/refineTone", async (req, res) => {
+    try {
+    const { text, tone } = req.body; // tone: 'professional', 'casual', 'funny', 'short'
+
+    const prompt = `
+      Rewrite the following chat message to sound more ${tone}.
+      Original Message: "${text}"
+      
+      Rules:
+      - Keep the core meaning identical.
+      - Maintain a natural chat vibe.
+      - Return ONLY the rewritten string, no extra text.
+    `;
+    const result = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: prompt,
+    });
+
+    const refinedText = result.text().trim();
+
+    res.status(200).json({ refinedText });
+  } catch (error) {
+    console.error("Tone Refine Error:", error);
+    res.status(500).json({ error: "Failed to refine tone" });
+  }
+});
 router.post("/generate-replies", async (req, res) => {
   const { message: lastMessage, isOwnMessage } = req.body;
   console.log("Received for AI:", lastMessage, "Is own message?", isOwnMessage);

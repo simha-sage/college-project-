@@ -1,4 +1,4 @@
-import { Smile, Send } from "lucide-react";
+import { Smile, Send, Sparkles } from "lucide-react";
 import { useState, useEffect, useContext } from "react";
 import { AuthContext } from "../AuthContext";
 import EmojiPicker from "emoji-picker-react";
@@ -59,6 +59,62 @@ const Message = ({ text, time, isMe }) => {
 };
 
 const ChatWindow = ({ selectedFriend, conversationId }) => {
+  const [showToneMenu, setShowToneMenu] = useState(false);
+
+  const tones = [
+    { label: "Brief", value: "short", icon: "📏" },
+    { label: "Professional", value: "professional", icon: "💼" },
+    { label: "Funny", value: "funny", icon: "😂" },
+    { label: "Casual", value: "casual", icon: "✌️" },
+  ];
+
+  const handleToneChange = async (selectedTone) => {
+    if (!text.trim()) return;
+
+    try {
+      const response = await fetch(`${API_URL}/api/ai/refineTone`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          text: text,
+          tone: selectedTone,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Server responded with status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      // In our backend, we called the field 'refinedText'
+      setText(data.refinedText);
+      setShowToneMenu(false);
+    } catch (err) {
+      console.error("Tone change failed:", err);
+      // Optional: Show a small toast or error message to the user
+    }
+  };
+
+  const toneMenuRef = useRef(null); // 1. Create the ref
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      // 2. Check if the menu is open and if the click was OUTSIDE the menu
+      if (toneMenuRef.current && !toneMenuRef.current.contains(event.target)) {
+        setShowToneMenu(false);
+      }
+    };
+
+    // 3. Attach the listener to the whole document
+    document.addEventListener("mousedown", handleClickOutside);
+
+    // 4. Cleanup when the component unmounts
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showToneMenu]); // Re-run when state changes
+
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const emojiPickerRef = useRef(null);
   useEffect(() => {
@@ -242,6 +298,22 @@ const ChatWindow = ({ selectedFriend, conversationId }) => {
 
         {/* Your Original Input Bar */}
         <div className="flex items-center gap-4 bg-white/10 p-3 rounded-2xl border border-white/20 shadow-lg backdrop-blur-sm">
+          {showToneMenu && (
+            <div
+              ref={toneMenuRef}
+              className="absolute bottom-16 right-0 bg-zinc-900 border border-white/20 rounded-xl p-2 flex flex-col gap-1 shadow-2xl z-50"
+            >
+              {tones.map((t) => (
+                <button
+                  key={t.value}
+                  onClick={() => handleToneChange(t.value)}
+                  className="text-white/80 hover:bg-white/10 px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition-colors"
+                >
+                  <span>{t.icon}</span> {t.label}
+                </button>
+              ))}
+            </div>
+          )}
           <Smile
             size={20}
             className={`${showEmojiPicker ? "text-yellow-400" : "text-white/70"} cursor-pointer hover:text-white transition-colors`}
@@ -257,6 +329,14 @@ const ChatWindow = ({ selectedFriend, conversationId }) => {
             }}
             onKeyDown={(e) => e.key === "Enter" && sendMsg()}
           />
+          {/* The Tone Changer Trigger */}
+          {text.length > 3 && (
+            <Sparkles
+              size={20}
+              className={`cursor-pointer transition-colors ${showToneMenu ? "text-yellow-400" : "text-white/50 hover:text-white"}`}
+              onClick={() => setShowToneMenu(!showToneMenu)}
+            />
+          )}
           <button
             className="bg-white/20 p-2 rounded-xl text-white hover:bg-white/30 transition-colors"
             onClick={() => sendMsg()}
