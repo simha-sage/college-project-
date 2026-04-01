@@ -10,6 +10,7 @@ import sendMsg from "./messageAPIs/sendMsg.js";
 import conversations from "./messageAPIs/conversations.js";
 import getChats from "./messageAPIs/getChats.js";
 import Conversation from "./models/conversation.js";
+import replyRecommendations from "./ai/replyRecommendations.js";
 
 dotenv.config();
 
@@ -91,6 +92,7 @@ app.use("/friend", crudFriends);
 app.use("/message", sendMsg);
 app.use("/convos", conversations);
 app.use("/messages", getChats);
+app.use("/ai", replyRecommendations);
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB connected"));

@@ -59,11 +59,40 @@ const Message = ({ text, time, isMe }) => {
 const ChatWindow = ({ selectedFriend, conversationId }) => {
   const [text, setText] = useState("");
   const [messages, setMessages] = useState([]);
+  const [suggestions, setSuggestions] = useState([]);
 
   const { user, socket, onlineUsers } = useContext(AuthContext);
 
   // Derive online status
   const isOnline = onlineUsers?.includes(selectedFriend?._id);
+
+  const fetchSuggestions = async (lastMessage, isOwnMessage) => {
+    try {
+      const response = await fetch(
+        "http://localhost:5000/ai/generate-replies",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: lastMessage, isOwnMessage }),
+        },
+      );
+      const data = await response.json();
+      setSuggestions(data); // Assuming you have a state for suggestions
+      console.log("AI Suggestions:", data);
+    } catch (error) {
+      console.error("Error fetching AI suggestions:", error);
+    }
+  };
+  useEffect(() => {
+    console.log(messages);
+    if (messages.length === 0) return;
+    const lastMsg = messages[messages.length - 1];
+    if (lastMsg.sender._id === user._id) {
+      fetchSuggestions(lastMsg.text, true);
+    } else {
+      fetchSuggestions(lastMsg.text, false);
+    }
+  }, [messages]);
 
   // 1. Join conversation room
   useEffect(() => {
@@ -108,13 +137,14 @@ const ChatWindow = ({ selectedFriend, conversationId }) => {
   }, [conversationId, socket]);
 
   // 4. Send message handler
-  const sendMsg = () => {
-    if (!text.trim() || !socket) return;
+  const sendMsg = (msg) => {
+    let messageToSend = msg || text;
+    if (!messageToSend.trim() || !socket) return;
 
     socket.emit("sendMessage", {
       conversationId,
       sender: user._id,
-      text: text,
+      text: messageToSend,
     });
     setText("");
   };
@@ -158,24 +188,49 @@ const ChatWindow = ({ selectedFriend, conversationId }) => {
       <ChatContainer messages={messages} user={user} />
 
       {/* Input Area */}
-      <div className="mt-auto flex items-center gap-4 bg-white/10 p-3 rounded-2xl border border-white/20">
-        <Smile
-          size={20}
-          className="text-white/70 cursor-pointer hover:text-white"
-        />
-        <input
-          className="flex-1 bg-transparent text-white outline-none"
-          placeholder="Type your message here..."
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && sendMsg()}
-        />
-        <button
-          className="bg-white/20 p-2 rounded-xl text-white hover:bg-white/30 transition-colors"
-          onClick={sendMsg}
-        >
-          <Send size={20} />
-        </button>
+      <div className="mt-auto flex flex-col gap-3">
+        {/* AI Suggestions Bar */}
+        {suggestions.length > 0 && (
+          <div className="flex gap-2 px-2 overflow-x-auto no-scrollbar animate-fade-in">
+            {suggestions.map((suggestion, index) => (
+              <button
+                key={index}
+                onClick={() => {
+                  // Logic: Set the text and immediately trigger send
+                  sendMsg(suggestion);
+                  setSuggestions([]); // Clear after clicking
+                }}
+                className="whitespace-nowrap bg-white/10 border border-white/20 text-white/90 px-4 py-1.5 rounded-full text-sm hover:bg-white/20 hover:border-white/40 transition-all active:scale-95"
+              >
+                {suggestion}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Your Original Input Bar */}
+        <div className="flex items-center gap-4 bg-white/10 p-3 rounded-2xl border border-white/20 shadow-lg backdrop-blur-sm">
+          <Smile
+            size={20}
+            className="text-white/70 cursor-pointer hover:text-white"
+          />
+          <input
+            className="flex-1 bg-transparent text-white outline-none placeholder:text-white/40"
+            placeholder="Type your message here..."
+            value={text}
+            onChange={(e) => {
+              setText(e.target.value);
+              if (e.target.value.length > 0) setSuggestions([]); // Hide AI when user types
+            }}
+            onKeyDown={(e) => e.key === "Enter" && sendMsg()}
+          />
+          <button
+            className="bg-white/20 p-2 rounded-xl text-white hover:bg-white/30 transition-colors"
+            onClick={() => sendMsg()}
+          >
+            <Send size={20} />
+          </button>
+        </div>
       </div>
     </div>
   );
