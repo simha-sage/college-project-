@@ -2,14 +2,14 @@
 import { GoogleGenAI } from "@google/genai";
 const ai = new GoogleGenAI({});
 
-import express from "express";
+import express, { text } from "express";
 const router = express.Router();
 
 import dotenv from "dotenv";
 dotenv.config();
 
 router.post("/refineTone", async (req, res) => {
-    try {
+  try {
     const { text, tone } = req.body; // tone: 'professional', 'casual', 'funny', 'short'
 
     const prompt = `
@@ -30,7 +30,6 @@ router.post("/refineTone", async (req, res) => {
 
     res.status(200).json({ refinedText });
   } catch (error) {
-    console.error("Tone Refine Error:", error);
     res.status(500).json({ error: "Failed to refine tone" });
   }
 });

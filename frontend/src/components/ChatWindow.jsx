@@ -1,4 +1,4 @@
-import { Smile, Send, Sparkles } from "lucide-react";
+import { Smile, Send, Sparkles, Loader2, AlertCircle } from "lucide-react";
 import { useState, useEffect, useContext } from "react";
 import { AuthContext } from "../AuthContext";
 import EmojiPicker from "emoji-picker-react";
@@ -68,36 +68,34 @@ const ChatWindow = ({ selectedFriend, conversationId }) => {
     { label: "Casual", value: "casual", icon: "✌️" },
   ];
 
+  const [aiStatus, setAiStatus] = useState("idle"); // 'idle' | 'loading' | 'error'
+
   const handleToneChange = async (selectedTone) => {
     if (!text.trim()) return;
 
+    setAiStatus("loading"); // Start loading
+    setShowToneMenu(false); // Close menu immediately as requested
+
     try {
-      const response = await fetch(`${API_URL}/api/ai/refineTone`, {
+      const response = await fetch(`${API_URL}/ai/refineTone`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          text: text,
-          tone: selectedTone,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, tone: selectedTone }),
       });
 
-      if (!response.ok) {
-        throw new Error(`Server responded with status: ${response.status}`);
-      }
+      if (!response.ok) throw new Error("API Error");
 
       const data = await response.json();
-
-      // In our backend, we called the field 'refinedText'
       setText(data.refinedText);
-      setShowToneMenu(false);
+      setAiStatus("idle"); // Success! Back to idle
     } catch (err) {
-      console.error("Tone change failed:", err);
-      // Optional: Show a small toast or error message to the user
+      console.error(err);
+      setAiStatus("error"); // Show error symbol
+
+      // Reset to idle after 3 seconds so the user can try again
+      setTimeout(() => setAiStatus("idle"), 5000);
     }
   };
-
   const toneMenuRef = useRef(null); // 1. Create the ref
 
   useEffect(() => {
@@ -306,7 +304,7 @@ const ChatWindow = ({ selectedFriend, conversationId }) => {
               {tones.map((t) => (
                 <button
                   key={t.value}
-                  onClick={() => handleToneChange(t.value)}
+                  onClick={() => handleToneChange(t.value, text)}
                   className="text-white/80 hover:bg-white/10 px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition-colors"
                 >
                   <span>{t.icon}</span> {t.label}
@@ -325,21 +323,38 @@ const ChatWindow = ({ selectedFriend, conversationId }) => {
             value={text}
             onChange={(e) => {
               setText(e.target.value);
-              if (e.target.value.length > 0) setSuggestions([]); // Hide AI when user types
+              if (e.target.value.length > 10) setSuggestions([]); // Hide AI when user types
             }}
             onKeyDown={(e) => e.key === "Enter" && sendMsg()}
           />
           {/* The Tone Changer Trigger */}
-          {text.length > 3 && (
-            <Sparkles
-              size={20}
-              className={`cursor-pointer transition-colors ${showToneMenu ? "text-yellow-400" : "text-white/50 hover:text-white"}`}
-              onClick={() => setShowToneMenu(!showToneMenu)}
-            />
-          )}
+          <div className="flex items-center gap-2">
+            {/* Icon Logic */}
+            {aiStatus === "loading" ? (
+              <Loader2 size={20} className="text-blue-400 animate-spin" />
+            ) : aiStatus === "error" ? (
+              <AlertCircle
+                size={20}
+                className="text-red-500 animate-bounce"
+                title="Failed to refine"
+              />
+            ) : (
+              text.length > 0 && (
+                <Sparkles
+                  size={20}
+                  className={`cursor-pointer transition-colors ${
+                    showToneMenu
+                      ? "text-yellow-400"
+                      : "text-white/50 hover:text-white"
+                  }`}
+                  onClick={() => setShowToneMenu(!showToneMenu)}
+                />
+              )
+            )}
+          </div>
           <button
             className="bg-white/20 p-2 rounded-xl text-white hover:bg-white/30 transition-colors"
-            onClick={() => sendMsg()}
+            onClick={() => sendMsg(text)}
           >
             <Send size={20} />
           </button>
