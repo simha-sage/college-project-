@@ -44,20 +44,19 @@ const Settings = () => {
 
       // --- THE FIX ---
       // 1. Read the raw text of the response first
-      const responseText = res.text ? await res.text() : null;
-
-      // 2. Safely parse the text into JSON if it exists, otherwise use an empty object
-      const data = responseText ? JSON.parse(responseText) : {};
+      const responseText = await res.json();
 
       if (res.ok) {
         // Only update user if the backend actually returned user data
-        if (data.user) {
-          setUser(data.user);
+        if (responseText.user) {
+          setUser(responseText.user);
         }
         alert("Profile updated successfully!");
         setPassword(""); // Clear password field after success
       } else {
-        alert(data.message || `Update failed with status: ${res.status}`);
+        alert(
+          responseText.message || `Update failed with status: ${res.status}`,
+        );
       }
     } catch (err) {
       console.error("Update Error:", err);
