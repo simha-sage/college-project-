@@ -34,29 +34,39 @@ const Settings = () => {
       if (profilePic) formData.append("profilePic", profilePic);
 
       const res = await fetch(
-        `${process.env.REACT_APP_API_URL}/auth/updateProfile`,
+        `${import.meta.env.VITE_server}/auth/updateProfile`,
         {
           method: "PUT",
           credentials: "include",
-          body: formData, // Fetch automatically sets Content-Type for FormData
+          body: formData,
         },
       );
 
-      const data = await res.json();
+      // --- THE FIX ---
+      // 1. Read the raw text of the response first
+      const responseText = await res.text();
+
+      // 2. Safely parse the text into JSON if it exists, otherwise use an empty object
+      const data = responseText ? JSON.parse(responseText) : {};
+
       if (res.ok) {
-        setUser(data.user);
+        // Only update user if the backend actually returned user data
+        if (data.user) {
+          setUser(data.user);
+        }
         alert("Profile updated successfully!");
         setPassword(""); // Clear password field after success
       } else {
-        alert(data.message || "Update failed");
+        alert(data.message || `Update failed with status: ${res.status}`);
       }
     } catch (err) {
       console.error("Update Error:", err);
+      alert("An error occurred while saving. Please check the console.");
     }
   };
 
   const logout = async () => {
-    await fetch(`${process.env.REACT_APP_API_URL}/auth/logout`, {
+    await fetch(`${import.meta.env.VITE_server}/auth/logout`, {
       credentials: "include",
     });
     setUser(null);

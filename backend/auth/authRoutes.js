@@ -11,17 +11,18 @@ const router = express.Router();
 
 import { upload } from "../cloudinary.js";
 
-// PUT: /auth/updateProfile
 router.put(
   "/updateProfile",
-  auth, // Good: Middleware order is correct
+  auth,
   upload.single("profilePic"),
   async (req, res) => {
     try {
       const { name, bio, gender, password } = req.body;
       const userId = req.user?.id;
 
-      if (!userId) return res.status(401).json({ message: "Unauthorized" });
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
 
       // Use an object to track only fields that are actually sent
       const updateData = {};
@@ -29,7 +30,7 @@ router.put(
       if (bio !== undefined) updateData.bio = bio; // bio can be an empty string
       if (gender) updateData.gender = gender;
 
-      // 1. Handle Cloudinary Image
+      // 1. Handle Cloudinary/Local Image
       if (req.file) {
         updateData.profilePic = req.file.path;
       }
