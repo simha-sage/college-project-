@@ -46,6 +46,44 @@ io.on("connection", (socket) => {
     socket.join(conversationId);
   });
 
+  socket.on("typing", ({ conversationId, isTyping }) => {
+    if (!conversationId || !userId) return;
+    socket.to(conversationId).emit("typing", {
+      conversationId,
+      userId,
+      isTyping: Boolean(isTyping),
+    });
+  });
+
+  socket.on("markConversationSeen", async ({ conversationId }) => {
+    if (!conversationId || !userId) return;
+
+    const result = await Message.updateMany(
+      {
+        conversationId,
+        sender: { $ne: userId },
+        seenBy: { $ne: userId },
+      },
+      {
+        $addToSet: { seenBy: userId },
+      },
+    );
+
+    if (result.modifiedCount > 0) {
+      const seenMessageIds = await Message.find({
+        conversationId,
+        sender: { $ne: userId },
+        seenBy: userId,
+      }).select("_id");
+
+      io.to(conversationId).emit("messagesSeen", {
+        conversationId,
+        viewerId: userId,
+        messageIds: seenMessageIds.map((message) => message._id.toString()),
+      });
+    }
+  });
+
   socket.on("sendMessage", async (data) => {
     const { conversationId, sender, text } = data;
 

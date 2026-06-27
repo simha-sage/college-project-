@@ -1,13 +1,19 @@
-import { Smile, Send, Sparkles, Loader2, AlertCircle } from "lucide-react";
-import { useState, useEffect, useContext } from "react";
+import {
+  Smile,
+  Send,
+  Sparkles,
+  Loader2,
+  AlertCircle,
+  Check,
+  CheckCheck,
+} from "lucide-react";
+import { useState, useEffect, useContext, useRef } from "react";
 import { AuthContext } from "../AuthContext";
 import EmojiPicker from "emoji-picker-react";
 
 const API_URL = import.meta.env.VITE_server || "http://localhost:5000";
 
-import { useRef } from "react";
-
-const ChatContainer = ({ messages, user }) => {
+const ChatContainer = ({ messages, user, selectedFriend }) => {
   const scrollRef = useRef(null);
 
   useEffect(() => {
@@ -23,7 +29,9 @@ const ChatContainer = ({ messages, user }) => {
           key={msg._id}
           text={msg.text}
           time={msg.createdAt}
+          seenBy={msg.seenBy || []}
           isMe={msg?.sender?._id.toString() === user._id}
+          friendId={selectedFriend?._id}
         />
       ))}
 
@@ -33,26 +41,33 @@ const ChatContainer = ({ messages, user }) => {
   );
 };
 
-const Message = ({ text, time, isMe }) => {
+const Message = ({ id, text, time, isMe, seenBy, friendId }) => {
   const formattedTime = new Date(time).toLocaleTimeString([], {
     hour: "2-digit",
     minute: "2-digit",
     hour12: true,
   });
+  const isSeen =
+    isMe && friendId && seenBy?.some((viewer) => viewer === friendId);
   return (
     <div className={`flex ${isMe ? "justify-end" : "justify-start"} mb-2`}>
       <div
         className={`max-w-xs px-4 py-2 rounded-2xl text-sm
         ${
-          isMe
-            ? "bg-blue-500 text-white rounded-br-md"
-            : "bg-white/10 text-white rounded-bl-md"
+          !isMe
+            ? "bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-br-md"
+            : "bg-zinc-800 text-zinc-100 rounded-bl-md"
         }`}
       >
         <p>{text}</p>
-        <p className="text-[10px] opacity-70 mt-1 text-right">
-          {formattedTime}
-        </p>
+        <div className="mt-1 flex items-center justify-end gap-1 text-[10px] opacity-70">
+          <span>{formattedTime}</span>
+          {isMe && (
+            <span className={isSeen ? "text-sky-400" : "text-white/50"}>
+              {isSeen ? <CheckCheck size={12} /> : <Check size={12} />}
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -135,6 +150,8 @@ const ChatWindow = ({ selectedFriend, conversationId }) => {
   const [text, setText] = useState("");
   const [messages, setMessages] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
+  const [isFriendTyping, setIsFriendTyping] = useState(false);
+  const typingTimeoutRef = useRef(null);
 
   const { user, socket, onlineUsers } = useContext(AuthContext);
 
@@ -173,6 +190,14 @@ const ChatWindow = ({ selectedFriend, conversationId }) => {
     }
   }, [conversationId, socket]);
 
+  useEffect(() => {
+    setIsFriendTyping(false);
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = null;
+    }
+  }, [conversationId]);
+
   // 2. Fetch message history
   useEffect(() => {
     const fetchMsgs = async () => {
@@ -191,6 +216,44 @@ const ChatWindow = ({ selectedFriend, conversationId }) => {
     fetchMsgs();
   }, [conversationId]);
 
+  useEffect(() => {
+    if (!socket || !conversationId || !user?._id) return;
+
+    socket.emit("markConversationSeen", { conversationId });
+
+    const handleSeenMessages = ({
+      conversationId: seenConversationId,
+      viewerId,
+      messageIds,
+    }) => {
+      if (
+        seenConversationId !== conversationId ||
+        viewerId !== selectedFriend?._id
+      )
+        return;
+
+      setMessages((prev) =>
+        prev.map((message) =>
+          messageIds.includes(message._id) &&
+          message?.sender?._id?.toString() === user._id
+            ? {
+                ...message,
+                seenBy: Array.from(
+                  new Set([...(message.seenBy || []), viewerId]),
+                ),
+              }
+            : message,
+        ),
+      );
+    };
+
+    socket.on("messagesSeen", handleSeenMessages);
+
+    return () => {
+      socket.off("messagesSeen", handleSeenMessages);
+    };
+  }, [conversationId, selectedFriend?._id, socket, user?._id]);
+
   // 3. Listen for real-time messages
   useEffect(() => {
     if (!socket) return;
@@ -198,15 +261,55 @@ const ChatWindow = ({ selectedFriend, conversationId }) => {
     const handleNewMessage = (msg) => {
       if (msg.conversationId === conversationId) {
         setMessages((prev) => [...prev, msg]);
+        if (msg?.sender?._id?.toString() !== user?._id) {
+          socket.emit("markConversationSeen", { conversationId });
+        }
       }
     };
 
+    const handleTyping = ({
+      conversationId: typingConversationId,
+      userId,
+      isTyping,
+    }) => {
+      if (
+        typingConversationId !== conversationId ||
+        userId !== selectedFriend?._id
+      )
+        return;
+      setIsFriendTyping(Boolean(isTyping));
+    };
+
     socket.on("newMessage", handleNewMessage);
+    socket.on("typing", handleTyping);
 
     return () => {
       socket.off("newMessage", handleNewMessage);
+      socket.off("typing", handleTyping);
     };
-  }, [conversationId, socket]);
+  }, [conversationId, selectedFriend?._id, socket, user?._id]);
+
+  const emitTyping = (value) => {
+    if (!socket || !conversationId) return;
+
+    socket.emit("typing", {
+      conversationId,
+      isTyping: value.length > 0,
+    });
+
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    if (value.length === 0) return;
+
+    typingTimeoutRef.current = setTimeout(() => {
+      socket.emit("typing", {
+        conversationId,
+        isTyping: false,
+      });
+    }, 1200);
+  };
 
   // 4. Send message handler
   const sendMsg = (msg) => {
@@ -218,6 +321,10 @@ const ChatWindow = ({ selectedFriend, conversationId }) => {
       sender: user._id,
       text: messageToSend,
     });
+    socket.emit("typing", {
+      conversationId,
+      isTyping: false,
+    });
     setText("");
   };
 
@@ -227,7 +334,7 @@ const ChatWindow = ({ selectedFriend, conversationId }) => {
       <div className="flex items-center justify-between bg-white/10 p-4 rounded-2xl backdrop-blur-md">
         <div className="flex items-center gap-3">
           <div className="relative">
-            <div className="w-12 h-12 flex-shrink-0 rounded-full overflow-hidden border border-white/20 bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+            <div className="w-12 h-12 shrink-0 rounded-full overflow-hidden border border-white/20 bg-linear-to-br from-blue-500 to-purple-600 flex items-center justify-center">
               {selectedFriend?.profilePic ? (
                 <img
                   src={selectedFriend.profilePic}
@@ -257,7 +364,17 @@ const ChatWindow = ({ selectedFriend, conversationId }) => {
       </div>
 
       {/* Messages Area */}
-      <ChatContainer messages={messages} user={user} />
+      <ChatContainer
+        messages={messages}
+        user={user}
+        selectedFriend={selectedFriend}
+      />
+
+      {isFriendTyping && (
+        <div className="px-4 pb-2 text-xs text-sky-300 italic">
+          {selectedFriend?.name} is typing...
+        </div>
+      )}
 
       {/* Input Area */}
       <div className="mt-auto flex flex-col gap-3 relative">
@@ -322,8 +439,18 @@ const ChatWindow = ({ selectedFriend, conversationId }) => {
             placeholder="Type your message here..."
             value={text}
             onChange={(e) => {
-              setText(e.target.value);
+              const value = e.target.value;
+              setText(value);
+              emitTyping(value);
               if (e.target.value.length > 10) setSuggestions([]); // Hide AI when user types
+            }}
+            onBlur={() => {
+              if (socket && conversationId) {
+                socket.emit("typing", {
+                  conversationId,
+                  isTyping: false,
+                });
+              }
             }}
             onKeyDown={(e) => e.key === "Enter" && sendMsg()}
           />
