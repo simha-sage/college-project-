@@ -84,11 +84,22 @@ router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ msg: "Invalid credentials" });
+    const user = await User.findOne({ email }).select("-password");
 
-    const match = await bcrypt.compare(password, user.password);
-    if (!match) return res.status(400).json({ msg: "Invalid credentials" });
+    if (!user)
+      return res.status(400).json({
+        msg: "Invalid credentials",
+      });
+
+    const match = await bcrypt.compare(
+      password,
+      (await User.findById(user._id)).password,
+    );
+
+    if (!match)
+      return res.status(400).json({
+        msg: "Invalid credentials",
+      });
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
       expiresIn: "7d",
@@ -100,10 +111,16 @@ router.post("/login", async (req, res) => {
       sameSite: process.env.PRODUCTION === "true" ? "none" : "lax",
     });
 
-    res.json({ msg: "Login success" });
+    res.json({
+      msg: "Login success",
+      token,
+      user,
+    });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ msg: "Error" });
+    res.status(500).json({
+      msg: "Error",
+    });
   }
 });
 
@@ -131,12 +148,19 @@ router.post("/signup", async (req, res) => {
       sameSite: process.env.PRODUCTION === "true" ? "none" : "lax",
     });
 
-    res.json({ msg: "Signup success" });
+    const createdUser = await User.findById(user._id).select("-password");
+
+    res.json({
+      msg: "Signup success",
+      token,
+      user: createdUser,
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ msg: "Error" });
   }
 });
+
 router.post("/logout", (req, res) => {
   res.clearCookie("token", {
     httpOnly: true,
